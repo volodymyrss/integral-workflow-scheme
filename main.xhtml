@@ -1,0 +1,103 @@
+<p style="text-align: left;"><br /></p><p style="text-align: left;"><br /></p><ac:structured-macro ac:name="scroll-ignore" ac:schema-version="1" ac:macro-id="38d61699-c6b8-4fbf-b308-4809c875401e"><ac:rich-text-body><p><strong>Metadata</strong></p><ac:structured-macro ac:name="metadata-list" ac:schema-version="1" ac:macro-id="dcde24c2-a3fb-4b82-b1f6-11cd05fd317a"><ac:plain-text-body><![CDATA[|| reference | ISDC-EXPRO-TN-0007 |
+|| title | INTEGRAL Workflow in PIPEMAN |
+|| author | Integral Team |
+|| updated | <modified> |
+|| issue | 0 |
+|| revision | 1 |
+|| status | DRAFT |
+|| doctype | SUM |
+|| distribution | - |
+|| header | ESA UNCLASSIFIED - For Official Use |
+|| footer | ESA UNCLASSIFIED - For Official Use |
+|| organization | esac |
+|| address | European Space Astronomy Centre
+P.O. Box 78
+28691 Villanueva de la Ca?ada
+Madrid
+Spain
+Tel. (34) 91 813 1100 
+Fax (34) 91 813 1139
+www.esa.int |
+]]></ac:plain-text-body></ac:structured-macro><p><strong>Approval</strong></p><ac:structured-macro ac:name="metadata" ac:schema-version="1" ac:macro-id="5a8f18b8-fad7-4daa-a03a-07c798e5d068"><ac:parameter ac:name="0">approval_table</ac:parameter><ac:plain-text-body><![CDATA[|*Title* {metadata-from:title} |
+
+|*Issue* {metadata-from:issue}|*Revision* {metadata-from:revision}|
+|*Author* {metadata-from:author} |*Date* <date> |
+
+||*Approved by*||*Date*||
+|||]]></ac:plain-text-body></ac:structured-macro><p><strong>Change log</strong></p><ac:structured-macro ac:name="metadata" ac:schema-version="1" ac:macro-id="b598a81e-80ba-4ce7-8902-fc56dffafbcb"><ac:parameter ac:name="0">changelog_table</ac:parameter><ac:plain-text-body><![CDATA[|| *Reason for change* || *Issue* || *Revision* || *Date* ||
+| Initial version | 0 | 1 | <date> |]]></ac:plain-text-body></ac:structured-macro><p><strong>Change record</strong></p><ac:structured-macro ac:name="metadata" ac:schema-version="1" ac:macro-id="04cd5dd8-ea38-4fb9-8133-90fb663779cc"><ac:parameter ac:name="0">changerecord_table</ac:parameter><ac:plain-text-body><![CDATA[| *Issue* {metadata-from:issue} | *Revision* {metadata-from:revision} |
+
+|| *Reason for change* || *Date* || *Pages* || *Paragraph(s)* ||
+| Initial version | <date> | All | All |
+
+]]></ac:plain-text-body></ac:structured-macro><p class="auto-cursor-target"><br /></p></ac:rich-text-body></ac:structured-macro><p class="auto-cursor-target"><br /></p><ac:structured-macro ac:name="numberedheadings" ac:schema-version="1" ac:macro-id="a2f576e6-286c-401d-a582-5a393726249a"><ac:rich-text-body><h1>Introduction</h1><p>These are some notes on developing INTEGRAL PIPEMAN use case.</p><h1>Example of INTEGRAL workflow</h1><h2>An idea of INTEGRAL analysis</h2><p>INTEGRAL data is separated in <strong>observations</strong>. In total there is about 100 000 <strong>observations</strong>.</p><p><strong>Observations</strong> contain data about <strong>sources</strong>. In total there is about 1000 relevant semi-persistent <strong>sources. </strong>Sources are in general quite variable, hence each <strong>observation</strong> contains up to some 300 <strong>sources</strong> at once.</p><p>General input allows to derive (in general, in a non-trivial way) a set of observations for further analysis.</p><p>Observations are converted to images, images are merged, the combined results are used to produce source spectra for a given observation set.&nbsp; Source spectra are then modeled.</p><p>Here I skip a layer of workflow which corresponds to instrument calibration, which is also to some degree defined dynamically.</p><p><strong>Challenge of INTEGRAL analysis is that usually at least 100s or 1000s of observations are need for a single useful scientific outcome, and each observation contains many sources, which all need to be studied simultaneously.&nbsp; </strong></p><p><strong>It means that a useful scientific assessment implies typically computing many 1000s of individual workflow steps, with exact selection unknown before some analysis is performed.</strong></p><h2>Minimal General INTEGRAL Workflow</h2><p>Each workflow step is a pure function of it's inputs. Each step is characterized by it's own version.</p><p>Multiple&nbsp;<strong>general_integral_workflow</strong> instances are computed (possibly at the same time), for different observation sets (possibly overlapping) and workflow step versions.</p><p>In general, individual workflow steps, such as <strong>process_image(observation)</strong> may be identical within different <strong>general_integral_workflow</strong> , and hence can be re-used.</p><p><strong>It is essential that the exact set of the workflow steps is determined from the results of previous steps.</strong></p><h3>Pseudo-code (python-like, imperative)</h3><p><br /></p><ac:structured-macro ac:name="code" ac:schema-version="1" ac:macro-id="1f35c1d8-4d7f-4c08-b974-648fe34f0fb2"><ac:parameter ac:name="language">py</ac:parameter><ac:plain-text-body><![CDATA[def general_integral_workflow(target_source_and_time_frame):
+  # output: interpreted_source_spectra
+
+  observations = list_observations(target_source_and_time_frame) 
+
+  for observation in observations:
+    images[observation] = process_image(observation)
+  
+  merged_image, observations_subset = merge_images(images)
+
+  for observation in observations_subset:
+    spectra[observation] = process_observation_spectrum(observation, images[observation], merged_image)
+  
+  merge_spectra_by_source = merge_spectra_per_source(spectra)
+
+  for source_spectrum in merge_spectra_by_source:
+    interpreted_source_spectra[source_spectrum] = interpret_source_spectrum(source_spectrum)
+  
+  return interpreted_source_spectra]]></ac:plain-text-body></ac:structured-macro><p><br /></p><h3>Schematic CWL example</h3><p>Here is an example of CWL implementation of a subset of the complete generic workflow described above. This subset&nbsp; demonstrates essential Scatter-Gather feature of CWL:</p><ac:structured-macro ac:name="code" ac:schema-version="1" ac:macro-id="a4ed92f7-7513-48b3-ac95-5576b7a9182a"><ac:parameter ac:name="language">yml</ac:parameter><ac:plain-text-body><![CDATA[cwlVersion: v1.0
+class: Workflow
+
+requirements:
+ ScatterFeatureRequirement: {}
+
+inputs:
+  target: string
+
+steps:
+  list_observations:
+    run: list-observations-tool.cwl
+    in:
+      target: target
+    out: [observations]
+  image:
+    run: image-tool.cwl
+    scatter: observation
+    in:
+      observation: list_observations/observations
+    out: [image]
+  merge_images:
+    run: merge-images-tool.cwl
+    in:
+      images: image/image
+    out: [merged_image]
+
+outputs:
+  merged_image:
+    type: File]]></ac:plain-text-body></ac:structured-macro><p>&quot;Live&quot; example can be found here:</p><p><a href="https://github.com/volodymyrss/integral-workflow-scheme/">https://github.com/volodymyrss/integral-workflow-scheme/cwl</a></p><h3>Pseudo-code, functional-like, closer to what is done in the pipeline</h3><p>It is also important that a number of analysis results are reused between different workflows.</p><p>To facilitate re-use of pre-computed data and reinforce reproducibility, with the python INTEGRAL pipeline, we opted for an approach treating the workflow as functional expressions. Since workflow nodes are pure functions then can be easily cached, and their provenance DAG can be computed, with all it's benefits.</p><p>In this approach, each individual workflow step may output a workflow expression. Result of computing this expression is considered equivalent to the result of computing of the original workflow. When no complex workflow expression is needed, the output is data reference. This data reference can be also considered to be a trivial workflow expression (e.g. data(data-unit-id)).</p><p>The workflow expressions are usually simple YAML (later clarified for execution e.g. in CWL) or directly CWL.</p><p><br /></p><ac:structured-macro ac:name="code" ac:schema-version="1" ac:macro-id="f5b0e9bb-61fb-4011-a4f8-ee11a17d2417"><ac:parameter ac:name="language">py</ac:parameter><ac:plain-text-body><![CDATA[general_integral_workflow(target_source_and_time_frame)
+
+# computing general_integral_workflow returns an workflow expression
+
+general_integral_workflow(target_source_and_time_frame) == 
+map(model_source_spectrum, 
+    source_spectra(target_source_and_time_frame),
+)
+
+# during evaluation of source_spectra, another expression is returned:
+
+source_spectra(target_source_and_time_frame) == 
+map(lambda observation: process_observation_spectrum(observation, merged_image(merge_images(target_source_and_time_frame))),    
+    observations_subset(merged_images(target_source_and_time_frame))
+)
+
+# and finally merged_images yields
+
+merged_images(target_source_and_time_frame) ==
+merge_images(map(process_image,
+   	 			 find_observations(target_source_and_time_frame)
+            )          
+
+]]></ac:plain-text-body></ac:structured-macro><h1>Summary so far</h1><p>Airflow, to be adopted in PIPEMAN, does not explicitly support dynamic workflow definition. It means that all the workflow steps need to be known in advance.</p><p>It is always possible to use Airflow/PIPEMAN for allocation of pre-defined set of resources, and then run custom sub-scheduler within it.</p><p>It might be also possible to construct Airflow DAG directly from within the Airflow Task (<strong>TBD</strong>).</p><p><br /></p><h1>Applicable Documents</h1><table class="wrapped relative-table" style="width: 71.9776%;"><colgroup><col style="width: 3.49854%;" /><col style="width: 51.2148%;" /><col style="width: 45.2867%;" /></colgroup><tbody><tr><td colspan="1"><br /></td><td colspan="1"><p class="editable-field inactive" title="Click to edit">Document preparation on INTEGRAL topics with code examples</p></td><td colspan="1"><div class="content-wrapper"><p><ac:structured-macro ac:name="jira" ac:schema-version="1" ac:macro-id="ce2290aa-2a39-49d9-9b68-71e1e7ba66bd"><ac:parameter ac:name="server">SOCCI Jira</ac:parameter><ac:parameter ac:name="columns">key,summary,type,created,updated,due,assignee,reporter,priority,status,resolution</ac:parameter><ac:parameter ac:name="serverId">c7899917-75f1-3782-8de9-2b9e8fba3f32</ac:parameter><ac:parameter ac:name="key">PIPEMANMNGT-59</ac:parameter></ac:structured-macro></p></div></td></tr><tr><td colspan="1"><br /></td><td colspan="1">INTEGRAL OSA User Manual, IBIS section</td><td colspan="1"><a href="https://www.isdc.unige.ch/integral/download/osa/doc/11.1/osa_um_ibis/man.html">https://www.isdc.unige.ch/integral/download/osa/doc/11.1/osa_um_ibis/man.html</a></td></tr></tbody><thead><tr><th><div class="tablesorter-header-inner"><div class="tablesorter-header-inner">ID</div></div></th><th><div class="tablesorter-header-inner"><div class="tablesorter-header-inner">Title</div></div></th><th><div class="tablesorter-header-inner"><div class="tablesorter-header-inner">Reference</div></div></th></tr></thead></table><h1>Reference Documents</h1><table class="wrapped"><colgroup><col /><col /><col /></colgroup><tbody><tr><td>ESA-SEPP-MIN-MPM-200922</td><td>Minutes of Meeting</td><td><br /></td></tr></tbody><thead><tr><th><div class="tablesorter-header-inner"><div class="tablesorter-header-inner">ID</div></div></th><th><div class="tablesorter-header-inner"><div class="tablesorter-header-inner">Title</div></div></th><th><div class="tablesorter-header-inner"><div class="tablesorter-header-inner">Reference</div></div></th></tr></thead></table><h1>Terms, Definitions and Abbreviated Terms</h1><p>ISDC - INTEGRAL Science Data Center</p><p><br /></p><p><br /></p></ac:rich-text-body></ac:structured-macro><p class="auto-cursor-target"><br /></p>

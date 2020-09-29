@@ -1,0 +1,184 @@
+  
+
+  
+
+**Metadata**
+
+ **Approval**
+
+approval_table
+
+ **Change log**
+
+changelog_table
+
+ **Change record**
+
+changerecord_table
+
+  
+
+  
+
+# Introduction
+
+These are some notes on developing INTEGRAL PIPEMAN use case.
+
+# Example of INTEGRAL workflow
+
+## An idea of INTEGRAL analysis
+
+INTEGRAL data is separated in **observations**. In total there is about 100
+000 **observations**.
+
+ **Observations** contain data about **sources**. In total there is about 1000
+relevant semi-persistent **sources.** Sources are in general quite variable,
+hence each **observation** contains up to some 300 **sources** at once.
+
+General input allows to derive (in general, in a non-trivial way) a set of
+observations for further analysis.
+
+Observations are converted to images, images are merged, the combined results
+are used to produce source spectra for a given observation set.  Source
+spectra are then modeled.
+
+Here I skip a layer of workflow which corresponds to instrument calibration,
+which is also to some degree defined dynamically.
+
+ **Challenge of INTEGRAL analysis is that usually at least 100s or 1000s of
+observations are need for a single useful scientific outcome, and each
+observation contains many sources, which all need to be studied
+simultaneously.   **
+
+**It means that a useful scientific assessment implies typically computing
+many 1000s of individual workflow steps, with exact selection unknown before
+some analysis is performed.**
+
+## Minimal General INTEGRAL Workflow
+
+Each workflow step is a pure function of it's inputs. Each step is
+characterized by it's own version.
+
+Multiple  **general_integral_workflow** instances are computed (possibly at
+the same time), for different observation sets (possibly overlapping) and
+workflow step versions.
+
+In general, individual workflow steps, such as **process_image(observation)**
+may be identical within different **general_integral_workflow** , and hence
+can be re-used.
+
+ **It is essential that the exact set of the workflow steps is determined from
+the results of previous steps.**
+
+### Pseudo-code (python-like, imperative)
+
+  
+
+py
+
+  
+
+### Schematic CWL example
+
+Here is an example of CWL implementation of a subset of the complete generic
+workflow described above. This subset  demonstrates essential Scatter-Gather
+feature of CWL:
+
+yml
+
+"Live" example can be found here:
+
+[https://github.com/volodymyrss/integral-workflow-
+scheme/cwl](https://github.com/volodymyrss/integral-workflow-scheme/)
+
+### Pseudo-code, functional-like, closer to what is done in the pipeline
+
+It is also important that a number of analysis results are reused between
+different workflows.
+
+To facilitate re-use of pre-computed data and reinforce reproducibility, with
+the python INTEGRAL pipeline, we opted for an approach treating the workflow
+as functional expressions. Since workflow nodes are pure functions then can be
+easily cached, and their provenance DAG can be computed, with all it's
+benefits.
+
+In this approach, each individual workflow step may output a workflow
+expression. Result of computing this expression is considered equivalent to
+the result of computing of the original workflow. When no complex workflow
+expression is needed, the output is data reference. This data reference can be
+also considered to be a trivial workflow expression (e.g. data(data-unit-id)).
+
+The workflow expressions are usually simple YAML (later clarified for
+execution e.g. in CWL) or directly CWL.
+
+  
+
+py
+
+# Summary so far
+
+Airflow, to be adopted in PIPEMAN, does not explicitly support dynamic
+workflow definition. It means that all the workflow steps need to be known in
+advance.
+
+It is always possible to use Airflow/PIPEMAN for allocation of pre-defined set
+of resources, and then run custom sub-scheduler within it.
+
+It might be also possible to construct Airflow DAG directly from within the
+Airflow Task ( **TBD** ).
+
+  
+
+# Applicable Documents
+
+  
+|
+
+Document preparation on INTEGRAL topics with code examples
+
+|
+
+SOCCI
+Jirakey,summary,type,created,updated,due,assignee,reporter,priority,status,resolutionc7899917-75f1-3782-8de9-2b9e8fba3f32PIPEMANMNGT-59  
+  
+---|---|---  
+  
+| INTEGRAL OSA User Manual, IBIS section|
+<https://www.isdc.unige.ch/integral/download/osa/doc/11.1/osa_um_ibis/man.html>  
+  
+ID
+
+|
+
+Title
+
+|
+
+Reference  
+  
+# Reference Documents
+
+ESA-SEPP-MIN-MPM-200922| Minutes of Meeting|  
+  
+---|---|---  
+  
+ID
+
+|
+
+Title
+
+|
+
+Reference  
+  
+# Terms, Definitions and Abbreviated Terms
+
+ISDC - INTEGRAL Science Data Center
+
+  
+
+  
+
+  
+
