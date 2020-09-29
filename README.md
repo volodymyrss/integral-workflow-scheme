@@ -29,10 +29,24 @@ def general_integral_workflow(target_source_and_time_frame):
 ```
 
 
-```
-interpretted_source_spectra = general_integral_workflow(target_source_and_time_frame)
+```python
+general_integral_workflow <- target_source_and_time_frame
 
 # computing general_integral_workflow returns an workflow expression
 
-interpretted_source_spectra = map(interpret_source_spectrum, merge_spectra_per_source(map()))
+map(model_source_spectrum, 
+    source_spectra(target_source_and_time_frame),
+   )
+
+# during evalution of source_spectra, another expression is returned:
+
+map(lambda observation: process_observation_spectrum(observation, merged_image(merge_images(target_source_and_time_frame))),    
+    observations_subset(merge_images(target_source_and_time_frame))
+)
+
+# and subsequently merge_images yeilds
+
+merge_imagesin
+
+# 
 ```
