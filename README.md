@@ -4,7 +4,6 @@
 def general_integral_workflow(target_source, time_frame):
   # output: interpretted_source_spectra
 
-  # query databases, evaluate quality conditions
   observations = list_observations(target_source, time_frame) 
 
   for observation in observations:
