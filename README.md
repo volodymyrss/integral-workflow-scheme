@@ -30,23 +30,29 @@ def general_integral_workflow(target_source_and_time_frame):
 
 
 ```python
-general_integral_workflow <- target_source_and_time_frame
+general_integral_workflow(target_source_and_time_frame)
 
 # computing general_integral_workflow returns an workflow expression
 
+general_integral_workflow(target_source_and_time_frame) == 
 map(model_source_spectrum, 
     source_spectra(target_source_and_time_frame),
-   )
-
-# during evalution of source_spectra, another expression is returned:
-
-map(lambda observation: process_observation_spectrum(observation, merged_image(merge_images(target_source_and_time_frame))),    
-    observations_subset(merge_images(target_source_and_time_frame))
 )
 
-# and subsequently merge_images yeilds
+# during evaluation of source_spectra, another expression is returned:
 
-merge_imagesin
+source_spectra(target_source_and_time_frame) == 
+map(lambda observation: process_observation_spectrum(observation, merged_image(merge_images(target_source_and_time_frame))),    
+    observations_subset(merged_images(target_source_and_time_frame))
+)
+
+# and finally merged_images yields
+
+merged_images(target_source_and_time_frame) ==
+merge_images(map(process_image,
+   	 			 find_observations(target_source_and_time_frame)
+            )          
+
 
 # 
 ```
