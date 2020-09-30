@@ -2,7 +2,7 @@
 
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: /home/vsavchenko/cwl/list-observations.sh
+baseCommand: list-observations.sh
 inputs:
   target:
     type: string

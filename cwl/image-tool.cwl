@@ -2,7 +2,7 @@
 
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: /home/vsavchenko/cwl/image.sh
+baseCommand: image.sh
 inputs:
   observation:
     type: File

@@ -1,5 +1,5 @@
 cwl:
-	cwltool --move-output --debug scatter-gather.cwl --target test-target
+	make -C cwl
 
 pull-co:
-  co --docid 67797105 --store-config pull
+	co --docid 67797105 --store-config pull

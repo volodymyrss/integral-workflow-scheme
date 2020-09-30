@@ -2,7 +2,7 @@
 
 cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: /home/vsavchenko/cwl/merge-images.sh
+baseCommand: merge-images.sh
 inputs:
   images:
     type: File[]
