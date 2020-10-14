@@ -8,5 +8,6 @@ cwl:
 		--debug \
 		--cachedir $(CWLCACHE) \
 		scatter-gather.cwl \
-			--target test-target
+			--target test-target \
+			--data data
 

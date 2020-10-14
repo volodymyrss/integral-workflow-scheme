@@ -8,12 +8,14 @@ requirements:
 
 inputs:
   target: string
+  data: Directory
 
 steps:
   list_observations:
     run: list-observations-tool.cwl
     in:
       target: target
+      data: data
     out: [observations]
   image:
     run: image-tool.cwl
